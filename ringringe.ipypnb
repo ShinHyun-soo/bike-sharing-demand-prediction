@@ -1,0 +1,720 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "vPJ9jVBtNLHm"
+   },
+   "source": [
+    "## 라이브러리 로딩"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "id": "v-zC2rkdKDcI"
+   },
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "from sklearn.ensemble import RandomForestRegressor"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "train = pd.read_csv('data/train.csv') \n",
+    "test = pd.read_csv('data/test.csv')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "7T4NNGQbKT52"
+   },
+   "source": [
+    "## 결측치 확인 및 처리"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "Pdj-uplvKMsH",
+    "outputId": "3da8274c-1e55-408d-917a-4e9502961959"
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "id                          0\n",
+       "hour                        0\n",
+       "hour_bef_temperature        2\n",
+       "hour_bef_precipitation      2\n",
+       "hour_bef_windspeed          9\n",
+       "hour_bef_humidity           2\n",
+       "hour_bef_visibility         2\n",
+       "hour_bef_ozone             76\n",
+       "hour_bef_pm10              90\n",
+       "hour_bef_pm2.5            117\n",
+       "count                       0\n",
+       "dtype: int64"
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "train.isnull().sum()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "J4VedGdkKOFe",
+    "outputId": "322a3830-b70d-4254-8c33-83afd7088788"
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "id                         0\n",
+       "hour                       0\n",
+       "hour_bef_temperature       1\n",
+       "hour_bef_precipitation     1\n",
+       "hour_bef_windspeed         1\n",
+       "hour_bef_humidity          1\n",
+       "hour_bef_visibility        1\n",
+       "hour_bef_ozone            35\n",
+       "hour_bef_pm10             37\n",
+       "hour_bef_pm2.5            36\n",
+       "dtype: int64"
+      ]
+     },
+     "execution_count": 5,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "test.isnull().sum()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {
+    "id": "M_-tgG09KQRC"
+   },
+   "outputs": [],
+   "source": [
+    "train.fillna(0,inplace = True)\n",
+    "test.fillna(0,inplace = True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "{'bootstrap': True,\n",
+      " 'ccp_alpha': 0.0,\n",
+      " 'criterion': 'squared_error',\n",
+      " 'max_depth': None,\n",
+      " 'max_features': 'auto',\n",
+      " 'max_leaf_nodes': None,\n",
+      " 'max_samples': None,\n",
+      " 'min_impurity_decrease': 0.0,\n",
+      " 'min_samples_leaf': 1,\n",
+      " 'min_samples_split': 2,\n",
+      " 'min_weight_fraction_leaf': 0.0,\n",
+      " 'n_estimators': 42,\n",
+      " 'n_jobs': None,\n",
+      " 'oob_score': False,\n",
+      " 'random_state': None,\n",
+      " 'verbose': 0,\n",
+      " 'warm_start': False}\n"
+     ]
+    }
+   ],
+   "source": [
+    "model=RandomForestRegressor(n_estimators=42)\n",
+    "from pprint import pprint\n",
+    "pprint(model.get_params())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 파라미터 튜닝"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "{'bootstrap': [True, False],\n",
+      " 'max_depth': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, None],\n",
+      " 'max_features': ['auto', 'sqrt'],\n",
+      " 'min_samples_leaf': [1, 2, 4],\n",
+      " 'min_samples_split': [2, 5, 10],\n",
+      " 'n_estimators': [200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000]}\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "{'bootstrap': [True, False],\n",
+       " 'max_depth': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, None],\n",
+       " 'max_features': ['auto', 'sqrt'],\n",
+       " 'min_samples_leaf': [1, 2, 4],\n",
+       " 'min_samples_split': [2, 5, 10],\n",
+       " 'n_estimators': [200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000]}"
+      ]
+     },
+     "execution_count": 20,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import numpy as np\n",
+    "from sklearn.model_selection import RandomizedSearchCV\n",
+    "# Number of trees in random forest\n",
+    "n_estimators = [int(x) for x in np.linspace(start = 200, stop = 2000, num = 10)]\n",
+    "# Number of features to consider at every split\n",
+    "max_features = ['auto', 'sqrt']\n",
+    "# Maximum number of levels in tree\n",
+    "max_depth = [int(x) for x in np.linspace(10, 110, num = 11)]\n",
+    "max_depth.append(None)\n",
+    "# Minimum number of samples required to split a node\n",
+    "min_samples_split = [2, 5, 10]\n",
+    "# Minimum number of samples required at each leaf node\n",
+    "min_samples_leaf = [1, 2, 4]\n",
+    "# Method of selecting samples for training each tree\n",
+    "bootstrap = [True, False]\n",
+    "# Create the random grid\n",
+    "random_grid = {'n_estimators': n_estimators,\n",
+    "               'max_features': max_features,\n",
+    "               'max_depth': max_depth,\n",
+    "               'min_samples_split': min_samples_split,\n",
+    "               'min_samples_leaf': min_samples_leaf,\n",
+    "               'bootstrap': bootstrap}\n",
+    "pprint(random_grid)\n",
+    "{'bootstrap': [True, False],\n",
+    " 'max_depth': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, None],\n",
+    " 'max_features': ['auto', 'sqrt'],\n",
+    " 'min_samples_leaf': [1, 2, 4],\n",
+    " 'min_samples_split': [2, 5, 10],\n",
+    " 'n_estimators': [200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000]}"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 44,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Fitting 9 folds for each of 4320 candidates, totalling 38880 fits\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "RandomizedSearchCV(cv=9, estimator=RandomForestRegressor(), n_iter=4320,\n",
+       "                   n_jobs=-1,\n",
+       "                   param_distributions={'bootstrap': [True, False],\n",
+       "                                        'max_depth': [10, 20, 30, 40, 50, 60,\n",
+       "                                                      70, 80, 90, 100, 110,\n",
+       "                                                      None],\n",
+       "                                        'max_features': ['auto', 'sqrt'],\n",
+       "                                        'min_samples_leaf': [1, 2, 4],\n",
+       "                                        'min_samples_split': [2, 5, 10],\n",
+       "                                        'n_estimators': [200, 400, 600, 800,\n",
+       "                                                         1000, 1200, 1400, 1600,\n",
+       "                                                         1800, 2000]},\n",
+       "                   random_state=42, verbose=2)"
+      ]
+     },
+     "execution_count": 44,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Use the random grid to search for best hyperparameters\n",
+    "# First create the base model to tune\n",
+    "rf = RandomForestRegressor()\n",
+    "# Random search of parameters, using 3 fold cross validation, \n",
+    "# search across 100 different combinations, and use all available cores\n",
+    "rf_random = RandomizedSearchCV(estimator = rf, param_distributions = random_grid, n_iter = 4320, cv = 9, verbose=2, random_state=42, n_jobs = -1)\n",
+    "# Fit the random search model\n",
+    "rf_random.fit(train_x, train_y)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 45,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'n_estimators': 200,\n",
+       " 'min_samples_split': 2,\n",
+       " 'min_samples_leaf': 1,\n",
+       " 'max_features': 'auto',\n",
+       " 'max_depth': 110,\n",
+       " 'bootstrap': True}"
+      ]
+     },
+     "execution_count": 45,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "rf_random.best_params_"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 46,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "rf = RandomForestRegressor(n_estimators = 200,\n",
+    "                           min_samples_split = 2, \n",
+    "                           min_samples_leaf = 1,\n",
+    "                           max_depth = 110, \n",
+    "                           bootstrap = True)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "WFmBcnx2LLDe"
+   },
+   "source": [
+    "## 모델 정의 및 학습"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {
+    "id": "VALRp2K-LUBn"
+   },
+   "outputs": [],
+   "source": [
+    "train_x = train.drop(['count'],axis = 1)\n",
+    "train_y = train['count']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 47,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "WZ5MuARhLPX7",
+    "outputId": "5d0f5f9b-f558-412f-a3c0-f2e0ce3ce3c9"
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "RandomForestRegressor(max_depth=110, n_estimators=200)"
+      ]
+     },
+     "execution_count": 47,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "rf.fit(train_x,train_y)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 56,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from xgboost import XGBRegressor"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 64,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "reg = XGBRegressor(n_estimators = 200,\n",
+    "                    max_depth = 110)\n",
+    "reg.fit(train_x, train_y)\n",
+    "pred = reg.predict(test)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "jN5oDFfCL7fc"
+   },
+   "source": [
+    "## 학습 된 모델로 예측 데이터 생성"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 63,
+   "metadata": {
+    "id": "ITPZ9W3fLkPf"
+   },
+   "outputs": [],
+   "source": [
+    "pred = rf.predict(test)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "8cmQhhzjL-MD"
+   },
+   "source": [
+    "## 제출파일 생성"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 65,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/",
+     "height": 419
+    },
+    "id": "HC_74SxhLozW",
+    "outputId": "4059a217-b6dd-4783-aee3-46acda2e8d63"
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>id</th>\n",
+       "      <th>count</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>0</td>\n",
+       "      <td>NaN</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>1</td>\n",
+       "      <td>NaN</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>2</td>\n",
+       "      <td>NaN</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>4</td>\n",
+       "      <td>NaN</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>5</td>\n",
+       "      <td>NaN</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>...</th>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>710</th>\n",
+       "      <td>2148</td>\n",
+       "      <td>NaN</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>711</th>\n",
+       "      <td>2149</td>\n",
+       "      <td>NaN</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>712</th>\n",
+       "      <td>2165</td>\n",
+       "      <td>NaN</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>713</th>\n",
+       "      <td>2166</td>\n",
+       "      <td>NaN</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>714</th>\n",
+       "      <td>2177</td>\n",
+       "      <td>NaN</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>715 rows × 2 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "       id  count\n",
+       "0       0    NaN\n",
+       "1       1    NaN\n",
+       "2       2    NaN\n",
+       "3       4    NaN\n",
+       "4       5    NaN\n",
+       "..    ...    ...\n",
+       "710  2148    NaN\n",
+       "711  2149    NaN\n",
+       "712  2165    NaN\n",
+       "713  2166    NaN\n",
+       "714  2177    NaN\n",
+       "\n",
+       "[715 rows x 2 columns]"
+      ]
+     },
+     "execution_count": 65,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "submission = pd.read_csv('C:/Users/User/ringringe/content/data/submission.csv')\n",
+    "submission"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 66,
+   "metadata": {
+    "id": "erbo9F9dLuzX"
+   },
+   "outputs": [],
+   "source": [
+    "submission['count'] = pred"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 67,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/",
+     "height": 419
+    },
+    "id": "Fz5ZjLPgMZ9Z",
+    "outputId": "a44bc783-6708-448d-d1ea-b03904dcaf09"
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>id</th>\n",
+       "      <th>count</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>0</td>\n",
+       "      <td>110.437843</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>1</td>\n",
+       "      <td>187.968155</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>2</td>\n",
+       "      <td>56.289230</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>4</td>\n",
+       "      <td>23.666124</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>5</td>\n",
+       "      <td>85.705978</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>...</th>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>710</th>\n",
+       "      <td>2148</td>\n",
+       "      <td>41.078442</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>711</th>\n",
+       "      <td>2149</td>\n",
+       "      <td>67.621460</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>712</th>\n",
+       "      <td>2165</td>\n",
+       "      <td>90.824585</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>713</th>\n",
+       "      <td>2166</td>\n",
+       "      <td>160.606400</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>714</th>\n",
+       "      <td>2177</td>\n",
+       "      <td>128.306046</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>715 rows × 2 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "       id       count\n",
+       "0       0  110.437843\n",
+       "1       1  187.968155\n",
+       "2       2   56.289230\n",
+       "3       4   23.666124\n",
+       "4       5   85.705978\n",
+       "..    ...         ...\n",
+       "710  2148   41.078442\n",
+       "711  2149   67.621460\n",
+       "712  2165   90.824585\n",
+       "713  2166  160.606400\n",
+       "714  2177  128.306046\n",
+       "\n",
+       "[715 rows x 2 columns]"
+      ]
+     },
+     "execution_count": 67,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "submission"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 68,
+   "metadata": {
+    "id": "Ggp9jIZ7Lyf6"
+   },
+   "outputs": [],
+   "source": [
+    "submission.to_csv('베이스라인.csv',index = False)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "colab": {
+   "name": "따릉이  베이스라인",
+   "provenance": []
+  },
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.9.13"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 1
+}
